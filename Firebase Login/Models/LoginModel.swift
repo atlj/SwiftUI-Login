@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 
 class LoginModel: ObservableObject {
@@ -5,6 +6,9 @@ class LoginModel: ObservableObject {
 
 	@Published var showCredientalsIncorrectError = false
 	@Published var loading = false
+	@Published var saveCredientals = false
+
+	private var cancelables: [AnyCancellable] = []
 
 	var isLoggedIn: Bool {
 		return loginData?.idToken != nil
@@ -67,10 +71,30 @@ class LoginModel: ObservableObject {
 	}
 
 	init() {
+		let loadedValue = Login.loadFromKeychain()
+
+		switch loadedValue {
+		case .success(let loadedLogin):
+			self.loginData = loadedLogin
+
+		case .failure(let error):
+			print(error)
+		}
+
+		$loginData.sink { value in
+            if let value {
+                if(self.saveCredientals){
+                    _ = value.saveToKeychain()
+                }
+            } else {
+                Login.clearKeychain()
+            }
+		}.store(in: &cancelables)
 
 	}
 
-	// This is used to see the error state on previews.
+	/// This is used to see the error state on previews.
+	/// Please Don't use this outside of a preview.
 	init(showCredientalsIncorrectError: Bool) {
 		self.showCredientalsIncorrectError = showCredientalsIncorrectError
 	}

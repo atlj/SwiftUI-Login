@@ -28,6 +28,11 @@ struct LoginView: View {
 			}
 			.padding()
 
+			Toggle(isOn: $loginModel.saveCredientals) {
+				Text("Remember me")
+			}
+			.padding(.horizontal)
+
 			CustomButton(title: "Sign In", showLoadingIndicator: $loginModel.loading) {
 				loginModel.login(email: email, password: password)
 			}
